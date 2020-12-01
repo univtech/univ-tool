@@ -45,15 +45,15 @@ public abstract class ApiParser {
 		return MessageFormat.format("{0}/{1}/{2}/package-summary.html", getApiUrl(), moduleName, packageName.replaceAll("\\.", "\\/"));
 	}
 
-	private String getAllClassPath() {
+	protected String getAllClassPath() {
 		return MessageFormat.format("{0}/所有类.md", getApiPath());
 	}
 
-	private String getOverviewPath() {
+	protected String getOverviewPath() {
 		return MessageFormat.format("{0}/所有包.md", getApiPath());
 	}
 
-	private String getPackagePath(String packageName) {
+	protected String getPackagePath(String packageName) {
 		return MessageFormat.format("{0}/{1}.md", getApiPath(), packageName);
 	}
 
@@ -71,13 +71,13 @@ public abstract class ApiParser {
 		printAllClass(getApiPath());
 	}
 
-	private void writeAllClass(String apiName, String allClassUrl, String allClassPath) {
+	protected void writeAllClass(String apiName, String allClassUrl, String allClassPath) {
 		List<String> fullClassNames = parseAllClass(allClassUrl);
 		List<String> lines = buildLines(apiName, fullClassNames);
 		writeLines(lines, allClassPath);
 	}
 
-	private void writeOverviewOfModule(String apiName, String overviewUrl, String overviewPath) {
+	protected void writeOverviewOfModule(String apiName, String overviewUrl, String overviewPath) {
 		Map<String, List<String>> packageNameMap = new LinkedHashMap<>();
 		List<String> moduleNames = parseOverview(overviewUrl);
 		for (String moduleName : moduleNames) {
@@ -91,7 +91,7 @@ public abstract class ApiParser {
 		writeLines(lines, overviewPath);
 	}
 
-	private void writeOverviewOfPackage(String apiName, String overviewUrl, String overviewPath) {
+	protected void writeOverviewOfPackage(String apiName, String overviewUrl, String overviewPath) {
 		List<String> packageNames = parseOverview(overviewUrl);
 		for (String packageName : packageNames) {
 			writePackage(packageName, getPackageUrl(packageName), getPackagePath(packageName));
@@ -100,7 +100,7 @@ public abstract class ApiParser {
 		writeLines(lines, overviewPath);
 	}
 
-	private void writePackage(String packageName, String packageUrl, String packagePath) {
+	protected void writePackage(String packageName, String packageUrl, String packagePath) {
 		Map<String, List<String>> fullClassNameMap = parsePackage(packageName, packageUrl);
 		if (MapUtils.isEmpty(fullClassNameMap)) {
 			return;
@@ -109,23 +109,22 @@ public abstract class ApiParser {
 		writeLines(lines, packagePath);
 	}
 
-	private List<String> parseAllClass(String allClassUrl) {
+	protected List<String> parseAllClass(String allClassUrl) {
 		try {
 			Document htmlDocument = Jsoup.connect(allClassUrl).get();
-			Elements containerElements = parseAllClassContainer(htmlDocument);
+			Elements containerElements = parseAllClass(htmlDocument);
 			if (CollectionUtils.isEmpty(containerElements)) {
 				return Collections.emptyList();
 			}
 
 			Element containerElement = containerElements.get(0);
-			Elements aElements = containerElement.getElementsByTag("a");
+			Elements anchorElements = containerElement.getElementsByTag("a");
 
-			String in = "in ";
 			List<String> fullClassNames = new ArrayList<>();
-			for (Element aElement : aElements) {
-				String title = aElement.attr("title");
-				String packageName = title.substring(title.indexOf(in) + in.length());
-				fullClassNames.add(MessageFormat.format("{0}.{1}", packageName, aElement.text()));
+			for (Element anchorElement : anchorElements) {
+				String title = anchorElement.attr("title");
+				String packageName = title.substring(title.indexOf("in ") + "in ".length());
+				fullClassNames.add(MessageFormat.format("{0}.{1}", packageName, anchorElement.text()));
 			}
 			Collections.sort(fullClassNames);
 			return fullClassNames;
@@ -135,20 +134,20 @@ public abstract class ApiParser {
 		}
 	}
 
-	protected Elements parseAllClassContainer(Element element) {
-		return JsoupUtils.getElementsByTagAndClass(element, "div", "indexContainer");
+	protected Elements parseAllClass(Document htmlDocument) {
+		return JsoupUtils.getElementsByTagAndClass(htmlDocument, "div", "indexContainer");
 	}
 
-	private List<String> parseOverview(String overviewUrl) {
+	protected List<String> parseOverview(String overviewUrl) {
 		try {
 			Document htmlDocument = Jsoup.connect(overviewUrl).get();
-			Elements tableElements = JsoupUtils.getElementsByTagAndClass(htmlDocument, "table", "overviewSummary");
+			Elements tableElements = parseOverview(htmlDocument);
 			if (CollectionUtils.isEmpty(tableElements)) {
 				return Collections.emptyList();
 			}
 
 			Element tableElement = tableElements.get(0);
-			List<String> columnFirstTexts = parseColumnFirst(tableElement, 1);
+			List<String> columnFirstTexts = parseColumnFirst(tableElement, 1, false);
 			Collections.sort(columnFirstTexts);
 			return columnFirstTexts;
 		} catch (Exception e) {
@@ -157,17 +156,21 @@ public abstract class ApiParser {
 		}
 	}
 
-	private List<String> parseModule(String moduleName, String moduleUrl) {
+	protected Elements parseOverview(Document htmlDocument) {
+		return JsoupUtils.getElementsByTagAndClass(htmlDocument, "table", "overviewSummary");
+	}
+
+	protected List<String> parseModule(String moduleName, String moduleUrl) {
 		try {
 			Document htmlDocument = Jsoup.connect(moduleUrl).get();
-			Elements tableElements = JsoupUtils.getElementsByTagAndClass(htmlDocument, "table", "packagesSummary");
+			Elements tableElements = parseModule(htmlDocument);
 			if (CollectionUtils.isEmpty(tableElements)) {
 				return Collections.emptyList();
 			}
 
 			for (Element tableElement : tableElements) {
-				List<String> packageNames = parseColumnFirst(tableElement, 0);
-				if ("Package".equals(packageNames.remove(0))) {
+				List<String> packageNames = parseColumnFirst(tableElement, 0, false);
+				if (CollectionUtils.isNotEmpty(packageNames) && "Package".equals(packageNames.remove(0))) {
 					Collections.sort(packageNames);
 					return packageNames;
 				}
@@ -179,28 +182,26 @@ public abstract class ApiParser {
 		}
 	}
 
-	private Map<String, List<String>> parsePackage(String packageName, String packageUrl) {
+	protected Elements parseModule(Document htmlDocument) {
+		return JsoupUtils.getElementsByTagAndClass(htmlDocument, "table", "packagesSummary");
+	}
+
+	protected Map<String, List<String>> parsePackage(String packageName, String packageUrl) {
 		try {
 			Document htmlDocument = Jsoup.connect(packageUrl).get();
-			Elements tableElements = JsoupUtils.getElementsByTagAndClass(htmlDocument, "table", "typeSummary");
+			Elements tableElements = parsePackage(htmlDocument);
 			if (CollectionUtils.isEmpty(tableElements)) {
 				return Collections.emptyMap();
 			}
 
 			Map<String, List<String>> fullClassNameMap = ClassType.getClassTypeMap();
 			for (Element tableElement : tableElements) {
-				List<String> classNames = parseColumnFirst(tableElement, 0);
-				if (CollectionUtils.isEmpty(classNames)) {
-					continue;
+				List<String> fullClassNames = parseColumnFirst(tableElement, 0, true);
+				if (CollectionUtils.isNotEmpty(fullClassNames)) {
+					String classTypeName = ClassType.getZhName(fullClassNames.remove(0));
+					Collections.sort(fullClassNames);
+					fullClassNameMap.get(classTypeName).addAll(fullClassNames);
 				}
-
-				String classTypeName = ClassType.getZhName(classNames.remove(0));
-				List<String> fullClassNames = fullClassNameMap.get(classTypeName);
-
-				for (String className : classNames) {
-					fullClassNames.add(MessageFormat.format("{0}.{1}", packageName, className));
-				}
-				Collections.sort(fullClassNames);
 			}
 			return fullClassNameMap;
 		} catch (Exception e) {
@@ -209,25 +210,42 @@ public abstract class ApiParser {
 		}
 	}
 
-	private List<String> parseColumnFirst(Element tableElement, int beginIndex) {
+	protected Elements parsePackage(Document htmlDocument) {
+		return JsoupUtils.getElementsByTagAndClass(htmlDocument, "table", "typeSummary");
+	}
+
+	protected List<String> parseColumnFirst(Element tableElement, int beginIndex, boolean parseFullText) {
 		List<Integer> beginIndexs = Arrays.asList(0, 1);
 		if (!beginIndexs.contains(beginIndex)) {
 			return Collections.emptyList();
 		}
 
-		Elements columnFirstElements = tableElement.getElementsByClass("colFirst");
+		Elements columnFirstElements = parseColumnFirst(tableElement);
 		if (CollectionUtils.isEmpty(columnFirstElements) || columnFirstElements.size() < beginIndexs.size()) {
 			return Collections.emptyList();
 		}
 
 		List<String> columnFirstTexts = new ArrayList<>();
 		for (int index = beginIndex; index < columnFirstElements.size(); index++) {
-			columnFirstTexts.add(columnFirstElements.get(index).text());
+			Element columnFirstElement = columnFirstElements.get(index);
+			Elements anchorElements = columnFirstElement.getElementsByTag("a");
+			String columnFirstText = columnFirstElement.text();
+
+			if (parseFullText && CollectionUtils.isNotEmpty(anchorElements)) {
+				String title = anchorElements.get(0).attr("title");
+				String packageName = title.substring(title.indexOf("in ") + "in ".length());
+				columnFirstText = MessageFormat.format("{0}.{1}", packageName, columnFirstText);
+			}
+			columnFirstTexts.add(columnFirstText);
 		}
 		return columnFirstTexts;
 	}
 
-	private List<String> buildLines(String title, List<String> contents) {
+	protected Elements parseColumnFirst(Element tableElement) {
+		return tableElement.getElementsByClass("colFirst");
+	}
+
+	protected List<String> buildLines(String title, List<String> contents) {
 		List<String> lines = new ArrayList<>();
 		lines.add(MessageFormat.format("# {0}\r\n", title));
 		lines.addAll(contents);
@@ -235,7 +253,7 @@ public abstract class ApiParser {
 		return lines;
 	}
 
-	private List<String> buildLines(String title, Map<String, List<String>> contentMap, boolean ignoreEmptyContent) {
+	protected List<String> buildLines(String title, Map<String, List<String>> contentMap, boolean ignoreEmptyContent) {
 		List<String> lines = new ArrayList<>();
 		lines.add(MessageFormat.format("# {0}", title));
 		for (Entry<String, List<String>> contentEntry : contentMap.entrySet()) {
@@ -249,12 +267,10 @@ public abstract class ApiParser {
 		return lines;
 	}
 
-	private void printAllClass(String apiPath) {
+	protected void printAllClass(String apiPath) {
 		try {
 			List<String> ignoreFiles = Arrays.asList("README.md", "所有类.md", "所有包.md");
-			File[] files = new File(apiPath).listFiles((file) -> {
-				return !ignoreFiles.contains(file.getName());
-			});
+			File[] files = new File(apiPath).listFiles(file -> !ignoreFiles.contains(file.getName()));
 
 			List<String> fullClassNames = new ArrayList<>();
 			for (File file : files) {
@@ -264,7 +280,7 @@ public abstract class ApiParser {
 
 				for (String line : lines) {
 					if (line.startsWith(packageName)) {
-						if (line.contains("<")) {
+						if (!printGenericType() && line.contains("<")) {
 							line = line.substring(0, line.indexOf("<"));
 						}
 						fullClassNames.add(line);
@@ -279,13 +295,17 @@ public abstract class ApiParser {
 		}
 	}
 
-	private void printLines(List<String> lines) {
+	protected boolean printGenericType() {
+		return false;
+	}
+
+	protected void printLines(List<String> lines) {
 		for (String line : lines) {
 			System.out.println(line);
 		}
 	}
 
-	private void writeLines(List<String> lines, String path) {
+	protected void writeLines(List<String> lines, String path) {
 		try {
 			if (StringUtils.isEmpty(path)) {
 				printLines(lines);

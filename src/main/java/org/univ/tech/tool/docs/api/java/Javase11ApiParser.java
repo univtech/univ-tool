@@ -2,7 +2,7 @@ package org.univ.tech.tool.docs.api.java;
 
 import java.text.MessageFormat;
 
-import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.univ.tech.tool.docs.api.ApiParser;
 import org.univ.tech.tool.utils.JsoupUtils;
@@ -49,8 +49,8 @@ public class Javase11ApiParser extends ApiParser {
 	}
 
 	@Override
-	protected Elements parseAllClassContainer(Element element) {
-		return JsoupUtils.getElementsByTagAndClass(element, "main", "indexContainer");
+	protected Elements parseAllClass(Document htmlDocument) {
+		return JsoupUtils.getElementsByTagAndClass(htmlDocument, "main", "indexContainer");
 	}
 
 }
