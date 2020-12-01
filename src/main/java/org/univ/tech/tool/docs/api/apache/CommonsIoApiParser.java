@@ -5,7 +5,7 @@ import org.univ.tech.tool.docs.api.ApiParser;
 public class CommonsIoApiParser extends ApiParser {
 
 	public static void main(String[] args) {
-		new CommonsIoApiParser().writeAllClass();
+		new CommonsIoApiParser().writeAll();
 	}
 
 	@Override

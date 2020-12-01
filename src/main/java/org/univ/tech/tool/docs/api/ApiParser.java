@@ -57,29 +57,25 @@ public abstract class ApiParser {
 		return MessageFormat.format("{0}/{1}.md", getApiPath(), packageName);
 	}
 
-	protected boolean hasModules() {
-		return false;
-	}
-
-	protected void writeAllClass() {
-		writeAllClass(getApiName(), getAllClassUrl(), getAllClassPath());
-		if (hasModules()) {
-			writeOverviewOfModule(getApiName(), getOverviewUrl(), getOverviewPath());
+	public void writeAll() {
+		writeAllClass();
+		if (writeModule()) {
+			writeOverviewOfModule();
 		} else {
-			writeOverviewOfPackage(getApiName(), getOverviewUrl(), getOverviewPath());
+			writeOverviewOfPackage();
 		}
-		printAllClass(getApiPath());
+		printAllClass();
 	}
 
-	protected void writeAllClass(String apiName, String allClassUrl, String allClassPath) {
-		List<String> fullClassNames = parseAllClass(allClassUrl);
-		List<String> lines = buildLines(apiName, fullClassNames);
-		writeLines(lines, allClassPath);
+	public void writeAllClass() {
+		List<String> fullClassNames = parseAllClass(getAllClassUrl());
+		List<String> lines = buildLines(getApiName(), fullClassNames);
+		writeLines(lines, getAllClassPath());
 	}
 
-	protected void writeOverviewOfModule(String apiName, String overviewUrl, String overviewPath) {
+	public void writeOverviewOfModule() {
 		Map<String, List<String>> packageNameMap = new LinkedHashMap<>();
-		List<String> moduleNames = parseOverview(overviewUrl);
+		List<String> moduleNames = parseOverview(getOverviewUrl());
 		for (String moduleName : moduleNames) {
 			List<String> packageNames = parseModule(moduleName, getPackageUrl(moduleName));
 			for (String packageName : packageNames) {
@@ -87,17 +83,17 @@ public abstract class ApiParser {
 			}
 			packageNameMap.put(moduleName, packageNames);
 		}
-		List<String> lines = buildLines(apiName, packageNameMap, false);
-		writeLines(lines, overviewPath);
+		List<String> lines = buildLines(getApiName(), packageNameMap, false);
+		writeLines(lines, getOverviewPath());
 	}
 
-	protected void writeOverviewOfPackage(String apiName, String overviewUrl, String overviewPath) {
-		List<String> packageNames = parseOverview(overviewUrl);
+	public void writeOverviewOfPackage() {
+		List<String> packageNames = parseOverview(getOverviewUrl());
 		for (String packageName : packageNames) {
 			writePackage(packageName, getPackageUrl(packageName), getPackagePath(packageName));
 		}
-		List<String> lines = buildLines(apiName, packageNames);
-		writeLines(lines, overviewPath);
+		List<String> lines = buildLines(getApiName(), packageNames);
+		writeLines(lines, getOverviewPath());
 	}
 
 	protected void writePackage(String packageName, String packageUrl, String packagePath) {
@@ -107,6 +103,10 @@ public abstract class ApiParser {
 		}
 		List<String> lines = buildLines(packageName, fullClassNameMap, true);
 		writeLines(lines, packagePath);
+	}
+
+	protected boolean writeModule() {
+		return false;
 	}
 
 	protected List<String> parseAllClass(String allClassUrl) {
@@ -267,10 +267,10 @@ public abstract class ApiParser {
 		return lines;
 	}
 
-	protected void printAllClass(String apiPath) {
+	public void printAllClass() {
 		try {
 			List<String> ignoreFiles = Arrays.asList("README.md", "所有类.md", "所有包.md");
-			File[] files = new File(apiPath).listFiles(file -> !ignoreFiles.contains(file.getName()));
+			File[] files = new File(getApiPath()).listFiles(file -> !ignoreFiles.contains(file.getName()));
 
 			List<String> fullClassNames = new ArrayList<>();
 			for (File file : files) {

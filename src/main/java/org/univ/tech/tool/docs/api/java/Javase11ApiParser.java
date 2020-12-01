@@ -10,7 +10,7 @@ import org.univ.tech.tool.utils.JsoupUtils;
 public class Javase11ApiParser extends ApiParser {
 
 	public static void main(String[] args) {
-		new Javase11ApiParser().writeAllClass();
+		new Javase11ApiParser().writeAll();
 	}
 
 	@Override
@@ -44,7 +44,7 @@ public class Javase11ApiParser extends ApiParser {
 	}
 
 	@Override
-	protected boolean hasModules() {
+	protected boolean writeModule() {
 		return true;
 	}
 

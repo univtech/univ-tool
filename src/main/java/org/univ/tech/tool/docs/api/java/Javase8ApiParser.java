@@ -5,7 +5,7 @@ import org.univ.tech.tool.docs.api.ApiParser;
 public class Javase8ApiParser extends ApiParser {
 
 	public static void main(String[] args) {
-		new Javase8ApiParser().writeAllClass();
+		new Javase8ApiParser().writeAll();
 	}
 
 	@Override
