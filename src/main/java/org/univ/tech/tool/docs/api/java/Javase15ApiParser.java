@@ -1,11 +1,8 @@
 package org.univ.tech.tool.docs.api.java;
 
 import java.text.MessageFormat;
-import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.collections4.CollectionUtils;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -55,26 +52,12 @@ public class Javase15ApiParser extends ApiParser {
 
 	@Override
 	protected List<String> parseAllClass(String allClassUrl) {
-		try {
-			Document htmlDocument = Jsoup.connect(allClassUrl).get();
-			Elements tableElements = JsoupUtils.getElementsByTagAndClass(htmlDocument, "table", "summary-table");
-			if (CollectionUtils.isEmpty(tableElements)) {
-				return Collections.emptyList();
-			}
-
-			Element tableElement = tableElements.get(0);
-			List<String> fullClassNames = parseColumnFirst(tableElement, 1, true);
-			Collections.sort(fullClassNames);
-			return fullClassNames;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return Collections.emptyList();
-		}
+		return parseTable(allClassUrl, "summary-table", 1, true);
 	}
 
 	@Override
-	protected Elements parseOverview(Document htmlDocument) {
-		return JsoupUtils.getElementsByTagAndClass(htmlDocument, "table", "summary-table");
+	protected List<String> parseOverview(String overviewUrl) {
+		return parseTable(overviewUrl, "summary-table", 1, false);
 	}
 
 	@Override

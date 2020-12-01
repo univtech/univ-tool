@@ -139,25 +139,7 @@ public abstract class ApiParser {
 	}
 
 	protected List<String> parseOverview(String overviewUrl) {
-		try {
-			Document htmlDocument = Jsoup.connect(overviewUrl).get();
-			Elements tableElements = parseOverview(htmlDocument);
-			if (CollectionUtils.isEmpty(tableElements)) {
-				return Collections.emptyList();
-			}
-
-			Element tableElement = tableElements.get(0);
-			List<String> columnFirstTexts = parseColumnFirst(tableElement, 1, false);
-			Collections.sort(columnFirstTexts);
-			return columnFirstTexts;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return Collections.emptyList();
-		}
-	}
-
-	protected Elements parseOverview(Document htmlDocument) {
-		return JsoupUtils.getElementsByTagAndClass(htmlDocument, "table", "overviewSummary");
+		return parseTable(overviewUrl, "overviewSummary", 1, false);
 	}
 
 	protected List<String> parseModule(String moduleName, String moduleUrl) {
@@ -212,6 +194,24 @@ public abstract class ApiParser {
 
 	protected Elements parsePackage(Document htmlDocument) {
 		return JsoupUtils.getElementsByTagAndClass(htmlDocument, "table", "typeSummary");
+	}
+
+	protected List<String> parseTable(String url, String className, int beginIndex, boolean parseFullText) {
+		try {
+			Document htmlDocument = Jsoup.connect(url).get();
+			Elements tableElements = JsoupUtils.getElementsByTagAndClass(htmlDocument, "table", className);
+			if (CollectionUtils.isEmpty(tableElements)) {
+				return Collections.emptyList();
+			}
+
+			Element tableElement = tableElements.get(0);
+			List<String> columnFirstTexts = parseColumnFirst(tableElement, beginIndex, parseFullText);
+			Collections.sort(columnFirstTexts);
+			return columnFirstTexts;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return Collections.emptyList();
+		}
 	}
 
 	protected List<String> parseColumnFirst(Element tableElement, int beginIndex, boolean parseFullText) {
