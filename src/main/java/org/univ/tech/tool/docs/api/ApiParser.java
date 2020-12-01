@@ -6,11 +6,13 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
@@ -27,63 +29,103 @@ public abstract class ApiParser {
 
 	protected abstract String getApiPath();
 
-	protected String getAllClassesUrl() {
+	protected String getAllClassUrl() {
 		return MessageFormat.format("{0}/allclasses-noframe.html", getApiUrl());
 	}
 
-	protected String getAllClassesPath() {
-		return MessageFormat.format("{0}/所有类.md", getApiPath());
-	}
-
-	protected String getAllPackagesUrl() {
+	protected String getOverviewUrl() {
 		return MessageFormat.format("{0}/overview-summary.html", getApiUrl());
 	}
 
-	protected String getAllPackagesPath() {
-		return MessageFormat.format("{0}/所有包.md", getApiPath());
-	}
-
-	protected String getPackageClassesUrl(String packageName) {
+	protected String getPackageUrl(String packageName) {
 		return MessageFormat.format("{0}/{1}/package-summary.html", getApiUrl(), packageName.replaceAll("\\.", "\\/"));
 	}
 
-	protected String getPackageClassesPath(String packageName) {
+	protected String getPackageUrl(String moduleName, String packageName) {
+		return MessageFormat.format("{0}/{1}/{2}/package-summary.html", getApiUrl(), moduleName, packageName.replaceAll("\\.", "\\/"));
+	}
+
+	private String getAllClassPath() {
+		return MessageFormat.format("{0}/所有类.md", getApiPath());
+	}
+
+	private String getOverviewPath() {
+		return MessageFormat.format("{0}/所有包.md", getApiPath());
+	}
+
+	private String getPackagePath(String packageName) {
 		return MessageFormat.format("{0}/{1}.md", getApiPath(), packageName);
 	}
 
-	protected void writeAll() {
-		writeAllClasses();
-		writeAllPackages();
-		printAllClasses();
+	protected boolean hasModules() {
+		return false;
 	}
 
-	private void writeAllClasses() {
-		List<String> lines = new ArrayList<>();
-		lines.add(MessageFormat.format("# {0}\r\n", getApiName()));
-		lines.addAll(parseAllClasses());
-		lines.add("\r\n\r\n\r\n");
-		writeLines(lines, getAllClassesPath());
+	protected void writeAllClass() {
+		writeAllClass(getApiName(), getAllClassUrl(), getAllClassPath());
+		if (hasModules()) {
+			writeOverviewOfModule(getApiName(), getOverviewUrl(), getOverviewPath());
+		} else {
+			writeOverviewOfPackage(getApiName(), getOverviewUrl(), getOverviewPath());
+		}
+		printAllClass(getApiPath());
 	}
 
-	private List<String> parseAllClasses() {
+	private void writeAllClass(String apiName, String allClassUrl, String allClassPath) {
+		List<String> fullClassNames = parseAllClass(allClassUrl);
+		List<String> lines = buildLines(apiName, fullClassNames);
+		writeLines(lines, allClassPath);
+	}
+
+	private void writeOverviewOfModule(String apiName, String overviewUrl, String overviewPath) {
+		Map<String, List<String>> packageNameMap = new LinkedHashMap<>();
+		List<String> moduleNames = parseOverview(overviewUrl);
+		for (String moduleName : moduleNames) {
+			List<String> packageNames = parseModule(moduleName, getPackageUrl(moduleName));
+			for (String packageName : packageNames) {
+				writePackage(packageName, getPackageUrl(moduleName, packageName), getPackagePath(packageName));
+			}
+			packageNameMap.put(moduleName, packageNames);
+		}
+		List<String> lines = buildLines(apiName, packageNameMap, false);
+		writeLines(lines, overviewPath);
+	}
+
+	private void writeOverviewOfPackage(String apiName, String overviewUrl, String overviewPath) {
+		List<String> packageNames = parseOverview(overviewUrl);
+		for (String packageName : packageNames) {
+			writePackage(packageName, getPackageUrl(packageName), getPackagePath(packageName));
+		}
+		List<String> lines = buildLines(apiName, packageNames);
+		writeLines(lines, overviewPath);
+	}
+
+	private void writePackage(String packageName, String packageUrl, String packagePath) {
+		Map<String, List<String>> fullClassNameMap = parsePackage(packageName, packageUrl);
+		if (MapUtils.isEmpty(fullClassNameMap)) {
+			return;
+		}
+		List<String> lines = buildLines(packageName, fullClassNameMap, true);
+		writeLines(lines, packagePath);
+	}
+
+	private List<String> parseAllClass(String allClassUrl) {
 		try {
-			Document htmlDocument = Jsoup.connect(getAllClassesUrl()).get();
-			Elements divElements = JsoupUtils.getElementsByTagAndClass(htmlDocument, "div", "indexContainer");
-			if (CollectionUtils.isEmpty(divElements)) {
+			Document htmlDocument = Jsoup.connect(allClassUrl).get();
+			Elements containerElements = parseAllClassContainer(htmlDocument);
+			if (CollectionUtils.isEmpty(containerElements)) {
 				return Collections.emptyList();
 			}
 
-			Element divElement = divElements.get(0);
-			Elements aElements = divElement.getElementsByTag("a");
+			Element containerElement = containerElements.get(0);
+			Elements aElements = containerElement.getElementsByTag("a");
 
 			String in = "in ";
 			List<String> fullClassNames = new ArrayList<>();
 			for (Element aElement : aElements) {
 				String title = aElement.attr("title");
 				String packageName = title.substring(title.indexOf(in) + in.length());
-				String className = aElement.text();
-				String fullClassName = MessageFormat.format("{0}.{1}", packageName, className);
-				fullClassNames.add(fullClassName);
+				fullClassNames.add(MessageFormat.format("{0}.{1}", packageName, aElement.text()));
 			}
 			Collections.sort(fullClassNames);
 			return fullClassNames;
@@ -93,85 +135,70 @@ public abstract class ApiParser {
 		}
 	}
 
-	private void writeAllPackages() {
-		List<String> packageNames = parseAllPackages();
-		for (String packageName : packageNames) {
-			writePackageClasses(packageName);
-		}
-
-		List<String> lines = new ArrayList<>();
-		lines.add(MessageFormat.format("# {0}\r\n", getApiName()));
-		lines.addAll(packageNames);
-		lines.add("\r\n\r\n\r\n");
-		writeLines(lines, getAllPackagesPath());
+	protected Elements parseAllClassContainer(Element element) {
+		return JsoupUtils.getElementsByTagAndClass(element, "div", "indexContainer");
 	}
 
-	private List<String> parseAllPackages() {
+	private List<String> parseOverview(String overviewUrl) {
 		try {
-			Document htmlDocument = Jsoup.connect(getAllPackagesUrl()).get();
+			Document htmlDocument = Jsoup.connect(overviewUrl).get();
 			Elements tableElements = JsoupUtils.getElementsByTagAndClass(htmlDocument, "table", "overviewSummary");
 			if (CollectionUtils.isEmpty(tableElements)) {
 				return Collections.emptyList();
 			}
 
 			Element tableElement = tableElements.get(0);
-			Elements colFirstElements = tableElement.getElementsByClass("colFirst");
-			if (CollectionUtils.isEmpty(colFirstElements) || colFirstElements.size() < 2) {
-				return Collections.emptyList();
-			}
-
-			List<String> packageNames = new ArrayList<>();
-			for (int index = 1; index < colFirstElements.size(); index++) {
-				String packageName = colFirstElements.get(index).text();
-				packageNames.add(packageName);
-			}
-			Collections.sort(packageNames);
-			return packageNames;
+			List<String> columnFirstTexts = parseColumnFirst(tableElement, 1);
+			Collections.sort(columnFirstTexts);
+			return columnFirstTexts;
 		} catch (Exception e) {
 			e.printStackTrace();
 			return Collections.emptyList();
 		}
 	}
 
-	private void writePackageClasses(String packageName) {
-		List<String> lines = new ArrayList<>();
-		lines.add(MessageFormat.format("# {0}", packageName));
-
-		Map<String, List<String>> fullClassNameMap = parsePackageClasses(packageName);
-		for (Entry<String, List<String>> fullClassNameEntry : fullClassNameMap.entrySet()) {
-			if (CollectionUtils.isNotEmpty(fullClassNameEntry.getValue())) {
-				lines.add(MessageFormat.format("\r\n## {0}\r\n", fullClassNameEntry.getKey()));
-				lines.addAll(fullClassNameEntry.getValue());
+	private List<String> parseModule(String moduleName, String moduleUrl) {
+		try {
+			Document htmlDocument = Jsoup.connect(moduleUrl).get();
+			Elements tableElements = JsoupUtils.getElementsByTagAndClass(htmlDocument, "table", "packagesSummary");
+			if (CollectionUtils.isEmpty(tableElements)) {
+				return Collections.emptyList();
 			}
-		}
 
-		lines.add("\r\n\r\n\r\n");
-		writeLines(lines, getPackageClassesPath(packageName));
+			for (Element tableElement : tableElements) {
+				List<String> packageNames = parseColumnFirst(tableElement, 0);
+				if ("Package".equals(packageNames.remove(0))) {
+					Collections.sort(packageNames);
+					return packageNames;
+				}
+			}
+			return Collections.emptyList();
+		} catch (Exception e) {
+			e.printStackTrace();
+			return Collections.emptyList();
+		}
 	}
 
-	private Map<String, List<String>> parsePackageClasses(String packageName) {
+	private Map<String, List<String>> parsePackage(String packageName, String packageUrl) {
 		try {
-			Document htmlDocument = Jsoup.connect(getPackageClassesUrl(packageName)).get();
+			Document htmlDocument = Jsoup.connect(packageUrl).get();
 			Elements tableElements = JsoupUtils.getElementsByTagAndClass(htmlDocument, "table", "typeSummary");
 			if (CollectionUtils.isEmpty(tableElements)) {
 				return Collections.emptyMap();
 			}
 
-			Map<String, List<String>> fullClassNameMap = SummaryType.getSummaryMap();
+			Map<String, List<String>> fullClassNameMap = ClassType.getClassTypeMap();
 			for (Element tableElement : tableElements) {
-				Elements colFirstElements = tableElement.getElementsByClass("colFirst");
-				if (CollectionUtils.isEmpty(colFirstElements) || colFirstElements.size() < 2) {
+				List<String> classNames = parseColumnFirst(tableElement, 0);
+				if (CollectionUtils.isEmpty(classNames)) {
 					continue;
 				}
 
-				String summaryNameEn = colFirstElements.get(0).text();
-				String summaryNameZh = SummaryType.getZhName(summaryNameEn);
-				List<String> fullClassNames = fullClassNameMap.get(summaryNameZh);
+				String classTypeName = ClassType.getZhName(classNames.remove(0));
+				List<String> fullClassNames = fullClassNameMap.get(classTypeName);
 
-				for (int index = 1; index < colFirstElements.size(); index++) {
-					String className = colFirstElements.get(index).text();
-					String fullClassName = MessageFormat.format("{0}.{1}", packageName, className);
-					fullClassNames.add(fullClassName);
+				for (String className : classNames) {
+					fullClassNames.add(MessageFormat.format("{0}.{1}", packageName, className));
 				}
 				Collections.sort(fullClassNames);
 			}
@@ -182,10 +209,50 @@ public abstract class ApiParser {
 		}
 	}
 
-	private void printAllClasses() {
+	private List<String> parseColumnFirst(Element tableElement, int beginIndex) {
+		List<Integer> beginIndexs = Arrays.asList(0, 1);
+		if (!beginIndexs.contains(beginIndex)) {
+			return Collections.emptyList();
+		}
+
+		Elements columnFirstElements = tableElement.getElementsByClass("colFirst");
+		if (CollectionUtils.isEmpty(columnFirstElements) || columnFirstElements.size() < beginIndexs.size()) {
+			return Collections.emptyList();
+		}
+
+		List<String> columnFirstTexts = new ArrayList<>();
+		for (int index = beginIndex; index < columnFirstElements.size(); index++) {
+			columnFirstTexts.add(columnFirstElements.get(index).text());
+		}
+		return columnFirstTexts;
+	}
+
+	private List<String> buildLines(String title, List<String> contents) {
+		List<String> lines = new ArrayList<>();
+		lines.add(MessageFormat.format("# {0}\r\n", title));
+		lines.addAll(contents);
+		lines.add("\r\n\r\n\r\n");
+		return lines;
+	}
+
+	private List<String> buildLines(String title, Map<String, List<String>> contentMap, boolean ignoreEmptyContent) {
+		List<String> lines = new ArrayList<>();
+		lines.add(MessageFormat.format("# {0}", title));
+		for (Entry<String, List<String>> contentEntry : contentMap.entrySet()) {
+			if (ignoreEmptyContent && CollectionUtils.isEmpty(contentEntry.getValue())) {
+				continue;
+			}
+			lines.add(MessageFormat.format("\r\n## {0}\r\n", contentEntry.getKey()));
+			lines.addAll(contentEntry.getValue());
+		}
+		lines.add("\r\n\r\n\r\n");
+		return lines;
+	}
+
+	private void printAllClass(String apiPath) {
 		try {
 			List<String> ignoreFiles = Arrays.asList("README.md", "所有类.md", "所有包.md");
-			File[] files = new File(getApiPath()).listFiles((file) -> {
+			File[] files = new File(apiPath).listFiles((file) -> {
 				return !ignoreFiles.contains(file.getName());
 			});
 
@@ -197,9 +264,8 @@ public abstract class ApiParser {
 
 				for (String line : lines) {
 					if (line.startsWith(packageName)) {
-						int index = line.indexOf("<");
-						if (index > 0) {
-							line = line.substring(0, index);
+						if (line.contains("<")) {
+							line = line.substring(0, line.indexOf("<"));
 						}
 						fullClassNames.add(line);
 					}

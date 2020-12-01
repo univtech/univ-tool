@@ -5,7 +5,7 @@ import org.univ.tech.tool.docs.api.ApiParser;
 public class SpringFrameworkApiParser extends ApiParser {
 
 	public static void main(String[] args) {
-		new SpringFrameworkApiParser().writeAll();
+		new SpringFrameworkApiParser().writeAllClass();
 	}
 
 	@Override

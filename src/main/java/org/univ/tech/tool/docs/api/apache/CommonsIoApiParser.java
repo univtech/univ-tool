@@ -1,11 +1,11 @@
-package org.univ.tech.tool.docs.api.apache.commons;
+package org.univ.tech.tool.docs.api.apache;
 
 import org.univ.tech.tool.docs.api.ApiParser;
 
 public class CommonsIoApiParser extends ApiParser {
 
 	public static void main(String[] args) {
-		new CommonsIoApiParser().writeAll();
+		new CommonsIoApiParser().writeAllClass();
 	}
 
 	@Override

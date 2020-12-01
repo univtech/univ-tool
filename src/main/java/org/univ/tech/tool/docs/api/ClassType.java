@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public enum SummaryType {
+public enum ClassType {
 
 	Annotation(0, "Annotation Type", "注解"),
 
@@ -25,7 +25,7 @@ public enum SummaryType {
 
 	private String zhName;
 
-	private SummaryType(int order, String enName, String zhName) {
+	private ClassType(int order, String enName, String zhName) {
 		this.order = order;
 		this.enName = enName;
 		this.zhName = zhName;
@@ -44,30 +44,30 @@ public enum SummaryType {
 	}
 
 	public static int getOrder(String enName) {
-		SummaryType summaryType = getSummaryType(enName);
-		return summaryType == null ? values().length : summaryType.getOrder();
+		ClassType classType = getClassType(enName);
+		return classType == null ? values().length : classType.getOrder();
 	}
 
 	public static String getZhName(String enName) {
-		SummaryType summaryType = getSummaryType(enName);
-		return summaryType == null ? enName : summaryType.getZhName();
+		ClassType classType = getClassType(enName);
+		return classType == null ? enName : classType.getZhName();
 	}
 
-	public static SummaryType getSummaryType(String enName) {
-		for (SummaryType summaryType : values()) {
-			if (summaryType.getEnName().equals(enName)) {
-				return summaryType;
+	public static ClassType getClassType(String enName) {
+		for (ClassType classType : values()) {
+			if (classType.getEnName().equals(enName)) {
+				return classType;
 			}
 		}
 		return null;
 	}
 
-	public static Map<String, List<String>> getSummaryMap() {
-		Map<String, List<String>> summaryMap = new LinkedHashMap<>();
-		for (SummaryType summaryType : values()) {
-			summaryMap.put(summaryType.getZhName(), new ArrayList<>());
+	public static Map<String, List<String>> getClassTypeMap() {
+		Map<String, List<String>> classTypeMap = new LinkedHashMap<>();
+		for (ClassType classType : values()) {
+			classTypeMap.put(classType.getZhName(), new ArrayList<>());
 		}
-		return summaryMap;
+		return classTypeMap;
 	}
 
 }
