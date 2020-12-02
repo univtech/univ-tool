@@ -1,7 +1,9 @@
 package org.univ.tech.tool.docs.href;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.jsoup.Jsoup;
@@ -17,11 +19,11 @@ public class HtmlHrefParser {
 	}
 
 	private void writeHrefs(String url) {
-		Set<String> hrefs = parseHrefs(url);
+		List<String> hrefs = parseHrefs(url);
 		printHrefs(hrefs);
 	}
 
-	private Set<String> parseHrefs(String url) {
+	private List<String> parseHrefs(String url) {
 		try {
 			Document htmlDocument = Jsoup.connect(url).get();
 			Elements anchorElements = htmlDocument.getElementsByTag("a");
@@ -30,14 +32,17 @@ public class HtmlHrefParser {
 			for (Element anchorElement : anchorElements) {
 				hrefs.add(anchorElement.attr("href"));
 			}
-			return hrefs;
+
+			List<String> hrefUrls = new ArrayList<>(hrefs);
+			Collections.sort(hrefUrls);
+			return hrefUrls;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return Collections.emptySet();
+			return Collections.emptyList();
 		}
 	}
 
-	private void printHrefs(Set<String> hrefs) {
+	private void printHrefs(List<String> hrefs) {
 		for (String href : hrefs) {
 			System.out.println(href);
 		}

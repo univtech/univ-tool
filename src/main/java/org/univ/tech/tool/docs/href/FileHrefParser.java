@@ -1,5 +1,6 @@
 package org.univ.tech.tool.docs.href;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -14,11 +15,11 @@ public class FileHrefParser {
 	}
 
 	private void writeHrefs() {
-		Set<String> hrefs = parseHrefs();
+		List<String> hrefs = parseHrefs();
 		printHrefs(hrefs);
 	}
 
-	private Set<String> parseHrefs() {
+	private List<String> parseHrefs() {
 		try {
 			String hrefBegin = "href=\"";
 			String hrefEnd = "\"";
@@ -28,18 +29,21 @@ public class FileHrefParser {
 			for (String line : lines) {
 				while (line.contains(hrefBegin)) { // 可能存在多个href
 					line = line.substring(line.indexOf(hrefBegin) + hrefBegin.length());
-					hrefs.add(line.substring(0, line.indexOf(hrefEnd)));
+					hrefs.add(line.substring(0, line.indexOf(hrefEnd)).trim());
 					line = line.substring(line.indexOf(hrefEnd));
 				}
 			}
-			return hrefs;
+
+			List<String> hrefUrls = new ArrayList<>(hrefs);
+			Collections.sort(hrefUrls);
+			return hrefUrls;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return Collections.emptySet();
+			return Collections.emptyList();
 		}
 	}
 
-	private void printHrefs(Set<String> hrefs) {
+	private void printHrefs(List<String> hrefs) {
 		for (String href : hrefs) {
 			System.out.println(href);
 		}
