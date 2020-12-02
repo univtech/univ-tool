@@ -1,25 +1,26 @@
 package org.univ.tech.tool.docs.href;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.univ.tech.tool.docs.utils.DocsFileUtils;
 
-public class FileHrefParser {
+public class FileHrefParser extends HrefParser {
 
 	public static void main(String[] args) {
 		new FileHrefParser().writeHrefs();
 	}
 
 	private void writeHrefs() {
-		List<String> hrefs = parseHrefs();
-		printHrefs(hrefs);
+		Set<String> hrefs = parseHrefs();
+		List<String> hrefUrls = convertHrefs(hrefs);
+		printHrefs(hrefUrls);
 	}
 
-	private List<String> parseHrefs() {
+	private Set<String> parseHrefs() {
 		try {
 			String hrefBegin = "href=\"";
 			String hrefEnd = "\"";
@@ -29,23 +30,18 @@ public class FileHrefParser {
 			for (String line : lines) {
 				while (line.contains(hrefBegin)) { // 可能存在多个href
 					line = line.substring(line.indexOf(hrefBegin) + hrefBegin.length());
-					hrefs.add(line.substring(0, line.indexOf(hrefEnd)).trim());
-					line = line.substring(line.indexOf(hrefEnd));
+					int endIndex = line.indexOf(hrefEnd);
+					String href = line.substring(0, endIndex).trim();
+					if (StringUtils.isNotEmpty(href)) {
+						hrefs.add(href);
+					}
+					line = line.substring(endIndex);
 				}
 			}
-
-			List<String> hrefUrls = new ArrayList<>(hrefs);
-			Collections.sort(hrefUrls);
-			return hrefUrls;
+			return hrefs;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return Collections.emptyList();
-		}
-	}
-
-	private void printHrefs(List<String> hrefs) {
-		for (String href : hrefs) {
-			System.out.println(href);
+			return Collections.emptySet();
 		}
 	}
 

@@ -1,50 +1,35 @@
 package org.univ.tech.tool.docs.href;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
-public class HtmlHrefParser {
+public class HtmlHrefParser extends HrefParser {
 
 	public static void main(String[] args) {
-		String url = "";
-		new HtmlHrefParser().writeHrefs(url);
+//		String url = "https://spring.io/";
+		String url = "https://spring.io/guides";
+		List<String> ignoreTags = Arrays.asList("header", "footer");
+		new HtmlHrefParser().writeHrefs(url, ignoreTags);
 	}
 
-	private void writeHrefs(String url) {
-		List<String> hrefs = parseHrefs(url);
-		printHrefs(hrefs);
+	private void writeHrefs(String url, List<String> ignoreTags) {
+		Set<String> hrefs = parseHrefs(url, ignoreTags);
+		List<String> hrefUrls = convertHrefs(hrefs);
+		printHrefs(hrefUrls);
 	}
 
-	private List<String> parseHrefs(String url) {
+	private Set<String> parseHrefs(String url, List<String> ignoreTags) {
 		try {
 			Document htmlDocument = Jsoup.connect(url).get();
-			Elements anchorElements = htmlDocument.getElementsByTag("a");
-
-			Set<String> hrefs = new LinkedHashSet<>();
-			for (Element anchorElement : anchorElements) {
-				hrefs.add(anchorElement.attr("href"));
-			}
-
-			List<String> hrefUrls = new ArrayList<>(hrefs);
-			Collections.sort(hrefUrls);
-			return hrefUrls;
+			return parseHrefs(htmlDocument, ignoreTags);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return Collections.emptyList();
-		}
-	}
-
-	private void printHrefs(List<String> hrefs) {
-		for (String href : hrefs) {
-			System.out.println(href);
+			return Collections.emptySet();
 		}
 	}
 
