@@ -1,4 +1,4 @@
-package com.test.docs;
+package org.univ.tech.tool.docs;
 
 import java.io.File;
 import java.util.ArrayList;

@@ -1,4 +1,4 @@
-package org.univ.tech.tool.utils;
+package org.univ.tech.tool.docs.utils;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.jsoup.nodes.Element;

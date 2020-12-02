@@ -5,7 +5,7 @@ import java.text.MessageFormat;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 import org.univ.tech.tool.docs.api.ApiParser;
-import org.univ.tech.tool.utils.JsoupUtils;
+import org.univ.tech.tool.docs.utils.JsoupUtils;
 
 public class Javase11ApiParser extends ApiParser {
 

@@ -7,7 +7,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.univ.tech.tool.docs.api.ApiParser;
-import org.univ.tech.tool.utils.JsoupUtils;
+import org.univ.tech.tool.docs.utils.JsoupUtils;
 
 public class Javase15ApiParser extends ApiParser {
 

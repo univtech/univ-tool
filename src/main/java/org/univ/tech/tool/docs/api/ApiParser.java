@@ -19,7 +19,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import org.univ.tech.tool.utils.JsoupUtils;
+import org.univ.tech.tool.docs.utils.JsoupUtils;
 
 public abstract class ApiParser {
 
