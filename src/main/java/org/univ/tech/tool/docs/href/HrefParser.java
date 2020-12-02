@@ -14,8 +14,8 @@ import org.jsoup.select.Elements;
 
 public class HrefParser {
 
-	protected Set<String> parseHrefs(Document htmlDocument, List<String> ignoreTags) {
-		Element bodyElement = htmlDocument.getElementsByTag("body").get(0);
+	protected Set<String> parseHrefs(Document htmlDocument, String tag, List<String> ignoreTags) {
+		Element bodyElement = htmlDocument.getElementsByTag(tag).get(0);
 		if (CollectionUtils.isNotEmpty(ignoreTags)) {
 			for (String ignoreTag : ignoreTags) {
 				bodyElement.getElementsByTag(ignoreTag).remove();
