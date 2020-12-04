@@ -1,5 +1,6 @@
 package org.univ.tech.tool.docs.href;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -7,20 +8,20 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.univ.tech.tool.docs.utils.DocsFileUtils;
+import org.univ.tech.tool.docs.utils.LineUtils;
 
-public class FileHrefParser extends HrefParser {
+public class FileHrefParser {
 
 	public static void main(String[] args) {
 		new FileHrefParser().writeHrefs();
 	}
 
 	private void writeHrefs() {
-		Set<String> hrefs = parseHrefs();
-		List<String> hrefUrls = convertHrefs(hrefs);
-		printHrefs(hrefUrls);
+		List<String> hrefs = parseHrefs();
+		LineUtils.printLines(hrefs);
 	}
 
-	private Set<String> parseHrefs() {
+	private List<String> parseHrefs() {
 		try {
 			String hrefBegin = "href=\"";
 			String hrefEnd = "\"";
@@ -38,10 +39,13 @@ public class FileHrefParser extends HrefParser {
 					line = line.substring(endIndex);
 				}
 			}
-			return hrefs;
+
+			List<String> hrefUrls = new ArrayList<>(hrefs);
+			Collections.sort(hrefUrls);
+			return hrefUrls;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return Collections.emptySet();
+			return Collections.emptyList();
 		}
 	}
 

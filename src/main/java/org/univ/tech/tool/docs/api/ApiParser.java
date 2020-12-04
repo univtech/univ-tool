@@ -14,12 +14,13 @@ import java.util.Map.Entry;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.univ.tech.tool.docs.href.HtmlHrefParser;
 import org.univ.tech.tool.docs.utils.JsoupUtils;
+import org.univ.tech.tool.docs.utils.LineUtils;
 
 public abstract class ApiParser {
 
@@ -29,84 +30,85 @@ public abstract class ApiParser {
 
 	protected abstract String getApiPath();
 
-	protected String getAllClassUrl() {
-		return MessageFormat.format("{0}/allclasses-noframe.html", getApiUrl());
-	}
+	protected abstract String getAllClassUri();
 
-	protected String getOverviewUrl() {
-		return MessageFormat.format("{0}/overview-summary.html", getApiUrl());
-	}
+	protected abstract String getOverviewUri();
 
-	protected String getPackageUrl(String packageName) {
-		return MessageFormat.format("{0}/{1}/package-summary.html", getApiUrl(), packageName.replaceAll("\\.", "\\/"));
-	}
+	protected abstract String getModuleUri();
 
-	protected String getPackageUrl(String moduleName, String packageName) {
-		return MessageFormat.format("{0}/{1}/{2}/package-summary.html", getApiUrl(), moduleName, packageName.replaceAll("\\.", "\\/"));
-	}
-
-	protected String getAllClassPath() {
-		return MessageFormat.format("{0}/所有类.md", getApiPath());
-	}
-
-	protected String getOverviewPath() {
-		return MessageFormat.format("{0}/所有包.md", getApiPath());
-	}
-
-	protected String getPackagePath(String packageName) {
-		return MessageFormat.format("{0}/{1}.md", getApiPath(), packageName);
-	}
+	protected abstract String getPackageUri();
 
 	public void writeAll() {
 		writeAllClass();
 		if (writeModule()) {
-			writeOverviewOfModule();
+			writeModuleOverview();
 		} else {
-			writeOverviewOfPackage();
+			writePackageOverview();
 		}
 		printAllClass();
 	}
 
+	protected abstract boolean writeModule();
+
 	public void writeAllClass() {
-		List<String> fullClassNames = parseAllClass(getAllClassUrl());
+		String allClassUrl = MessageFormat.format("{0}/{1}", getApiUrl(), getAllClassUri());
+		List<String> fullClassNames = parseAllClass(allClassUrl);
+
 		List<String> lines = buildLines(getApiName(), fullClassNames);
-		writeLines(lines, getAllClassPath());
+		String allClassPath = MessageFormat.format("{0}/所有类.md", getApiPath());
+		LineUtils.writeLines(lines, allClassPath);
 	}
 
-	public void writeOverviewOfModule() {
+	public void writeModuleOverview() {
+		String overviewUrl = MessageFormat.format("{0}/{1}", getApiUrl(), getOverviewUri());
+		List<String> moduleNames = parseOverview(overviewUrl);
+
 		Map<String, List<String>> packageNameMap = new LinkedHashMap<>();
-		List<String> moduleNames = parseOverview(getOverviewUrl());
 		for (String moduleName : moduleNames) {
-			List<String> packageNames = parseModule(moduleName, getPackageUrl(moduleName));
-			for (String packageName : packageNames) {
-				writePackage(packageName, getPackageUrl(moduleName, packageName), getPackagePath(packageName));
-			}
+			String moduleUrl = MessageFormat.format("{0}/{1}/{2}", getApiUrl(), moduleName, getModuleUri());
+			List<String> packageNames = parseModule(moduleName, moduleUrl);
 			packageNameMap.put(moduleName, packageNames);
+
+			for (String packageName : packageNames) {
+				String packageUrl = MessageFormat.format("{0}/{1}/{2}/{3}", getApiUrl(), moduleName, packageName.replaceAll("\\.", "\\/"), getPackageUri());
+				writePackage(packageName, packageUrl);
+			}
 		}
+
 		List<String> lines = buildLines(getApiName(), packageNameMap, false);
-		writeLines(lines, getOverviewPath());
+		String overviewPath = MessageFormat.format("{0}/所有包.md", getApiPath());
+		LineUtils.writeLines(lines, overviewPath);
 	}
 
-	public void writeOverviewOfPackage() {
-		List<String> packageNames = parseOverview(getOverviewUrl());
+	public void writePackageOverview() {
+		String overviewUrl = MessageFormat.format("{0}/{1}", getApiUrl(), getOverviewUri());
+		List<String> packageNames = parseOverview(overviewUrl);
+
 		for (String packageName : packageNames) {
-			writePackage(packageName, getPackageUrl(packageName), getPackagePath(packageName));
+			String packageUrl = MessageFormat.format("{0}/{1}/{2}", getApiUrl(), packageName.replaceAll("\\.", "\\/"), getPackageUri());
+			writePackage(packageName, packageUrl);
 		}
+
 		List<String> lines = buildLines(getApiName(), packageNames);
-		writeLines(lines, getOverviewPath());
+		String overviewPath = MessageFormat.format("{0}/所有包.md", getApiPath());
+		LineUtils.writeLines(lines, overviewPath);
 	}
 
-	protected void writePackage(String packageName, String packageUrl, String packagePath) {
+	protected void writePackage(String packageName, String packageUrl) {
 		Map<String, List<String>> fullClassNameMap = parsePackage(packageName, packageUrl);
 		if (MapUtils.isEmpty(fullClassNameMap)) {
 			return;
 		}
+
 		List<String> lines = buildLines(packageName, fullClassNameMap, true);
-		writeLines(lines, packagePath);
+		String packagePath = MessageFormat.format("{0}/{1}.md", getApiPath(), packageName);
+		LineUtils.writeLines(lines, packagePath);
 	}
 
-	protected boolean writeModule() {
-		return false;
+	protected void writeHrefs(String url, String tag, List<String> ignoreTags, String path) {
+		List<String> hrefs = new HtmlHrefParser().parseHrefs(url, tag, ignoreTags);
+		String hrefPath = MessageFormat.format("{0}/{1}", getApiPath(), path);
+		LineUtils.writeLines(hrefs, hrefPath);
 	}
 
 	protected List<String> parseAllClass(String allClassUrl) {
@@ -289,7 +291,7 @@ public abstract class ApiParser {
 			}
 
 			Collections.sort(fullClassNames);
-			printLines(fullClassNames);
+			LineUtils.printLines(fullClassNames);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -297,24 +299,6 @@ public abstract class ApiParser {
 
 	protected boolean printGenericType() {
 		return false;
-	}
-
-	protected void printLines(List<String> lines) {
-		for (String line : lines) {
-			System.out.println(line);
-		}
-	}
-
-	protected void writeLines(List<String> lines, String path) {
-		try {
-			if (StringUtils.isEmpty(path)) {
-				printLines(lines);
-			} else {
-				FileUtils.writeLines(new File(path), lines);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 
 }

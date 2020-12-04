@@ -1,28 +1,23 @@
-package org.univ.tech.tool.docs.api.apache;
+package org.univ.tech.tool.docs.api.spring;
+
+import java.util.Arrays;
 
 import org.apache.commons.lang3.StringUtils;
 import org.univ.tech.tool.docs.api.ApiParser;
 
-public class CommonsIoApiParser extends ApiParser {
-
-	public static void main(String[] args) {
-		new CommonsIoApiParser().writeAll();
-	}
+public abstract class SpringApiParser extends ApiParser {
 
 	@Override
-	protected String getApiName() {
-		return "Apache Commons IO 2.8.0 API";
+	public void writeAll() {
+		super.writeAll();
+		writeProjectHrefs();
 	}
 
-	@Override
-	protected String getApiUrl() {
-		return "http://commons.apache.org/proper/commons-io/apidocs";
+	protected void writeProjectHrefs() {
+		writeHrefs(getProjectUrl(), "article", Arrays.asList("header", "footer"), "README.md");
 	}
 
-	@Override
-	protected String getApiPath() {
-		return "D:/Workspace/univtech/univ-tech/apache/commons/commons-io-2.8.0/api";
-	}
+	protected abstract String getProjectUrl();
 
 	@Override
 	protected String getAllClassUri() {

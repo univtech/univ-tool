@@ -1,11 +1,14 @@
 package org.univ.tech.tool.docs.api.spring;
 
-import org.univ.tech.tool.docs.api.ApiParser;
-
-public class SpringBootApiParser extends ApiParser {
+public class SpringBootApiParser extends SpringApiParser {
 
 	public static void main(String[] args) {
 		new SpringBootApiParser().writeAll();
+	}
+
+	@Override
+	protected String getProjectUrl() {
+		return "https://spring.io/projects/spring-boot";
 	}
 
 	@Override

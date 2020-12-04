@@ -1,5 +1,6 @@
 package org.univ.tech.tool.docs.api.java;
 
+import org.apache.commons.lang3.StringUtils;
 import org.univ.tech.tool.docs.api.ApiParser;
 
 public class Javase8ApiParser extends ApiParser {
@@ -21,6 +22,31 @@ public class Javase8ApiParser extends ApiParser {
 	@Override
 	protected String getApiPath() {
 		return "D:/Workspace/univtech/univ-tech/java/javase8/api";
+	}
+
+	@Override
+	protected String getAllClassUri() {
+		return "allclasses-noframe.html";
+	}
+
+	@Override
+	protected String getOverviewUri() {
+		return "overview-summary.html";
+	}
+
+	@Override
+	protected String getModuleUri() {
+		return StringUtils.EMPTY;
+	}
+
+	@Override
+	protected String getPackageUri() {
+		return "package-summary.html";
+	}
+
+	@Override
+	protected boolean writeModule() {
+		return false;
 	}
 
 }

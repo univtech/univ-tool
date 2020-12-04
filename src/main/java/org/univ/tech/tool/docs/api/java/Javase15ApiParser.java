@@ -1,6 +1,5 @@
 package org.univ.tech.tool.docs.api.java;
 
-import java.text.MessageFormat;
 import java.util.List;
 
 import org.jsoup.nodes.Document;
@@ -31,18 +30,23 @@ public class Javase15ApiParser extends ApiParser {
 	}
 
 	@Override
-	protected String getAllClassUrl() {
-		return MessageFormat.format("{0}/allclasses-index.html", getApiUrl());
+	protected String getAllClassUri() {
+		return "allclasses-index.html";
 	}
 
 	@Override
-	protected String getOverviewUrl() {
-		return MessageFormat.format("{0}/index.html", getApiUrl());
+	protected String getOverviewUri() {
+		return "index.html";
 	}
 
 	@Override
-	protected String getPackageUrl(String moduleName) {
-		return MessageFormat.format("{0}/{1}/module-summary.html", getApiUrl(), moduleName);
+	protected String getModuleUri() {
+		return "module-summary.html";
+	}
+
+	@Override
+	protected String getPackageUri() {
+		return "package-summary.html";
 	}
 
 	@Override
