@@ -8,18 +8,6 @@ import org.univ.tech.tool.docs.api.ApiParser;
 public abstract class SpringApiParser extends ApiParser {
 
 	@Override
-	public void writeAll() {
-		super.writeAll();
-		writeProjectHrefs();
-	}
-
-	protected void writeProjectHrefs() {
-		writeHrefs(getProjectUrl(), "article", Arrays.asList("header", "footer"), "README.md");
-	}
-
-	protected abstract String getProjectUrl();
-
-	@Override
 	protected String getAllClassUri() {
 		return "allclasses-noframe.html";
 	}
@@ -42,6 +30,10 @@ public abstract class SpringApiParser extends ApiParser {
 	@Override
 	protected boolean writeModule() {
 		return false;
+	}
+
+	protected void writeHrefs(String url) {
+		writeHrefs(url, "article", Arrays.asList("header", "footer"), "README.md", true);
 	}
 
 }

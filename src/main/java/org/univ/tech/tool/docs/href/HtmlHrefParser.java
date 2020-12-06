@@ -18,18 +18,10 @@ import org.univ.tech.tool.docs.utils.LineUtils;
 public class HtmlHrefParser {
 
 	public static void main(String[] args) {
-//		String url = "https://spring.io/";
+		String url = "https://spring.io/";
 //		String url = "https://spring.io/guides";
-//		String tag = "body"; 
-//		List<String> ignoreTags = Arrays.asList("header", "footer");
-
-		String url = "https://spring.io/projects/spring-security-saml";
-		String tag = "article";
+		String tag = "body";
 		List<String> ignoreTags = Arrays.asList("header", "footer");
-
-//		String url = "";
-//		String tag = "body";
-//		List<String> ignoreTags = Arrays.asList();
 
 		new HtmlHrefParser().writeHrefs(url, tag, ignoreTags);
 	}

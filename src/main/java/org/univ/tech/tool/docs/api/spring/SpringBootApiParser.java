@@ -7,6 +7,10 @@ public class SpringBootApiParser extends SpringApiParser {
 	}
 
 	@Override
+	protected String getProjectPath() {
+		return "D:/Workspace/univtech/univ-tech/spring/spring-boot-2.4.0";
+	}
+
 	protected String getProjectUrl() {
 		return "https://spring.io/projects/spring-boot";
 	}
@@ -19,11 +23,6 @@ public class SpringBootApiParser extends SpringApiParser {
 	@Override
 	protected String getApiUrl() {
 		return "https://docs.spring.io/spring-boot/docs/current/api";
-	}
-
-	@Override
-	protected String getApiPath() {
-		return "D:/Workspace/univtech/univ-tech/spring/spring-boot-2.4.0/api";
 	}
 
 }

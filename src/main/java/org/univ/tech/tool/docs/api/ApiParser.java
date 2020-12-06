@@ -24,11 +24,11 @@ import org.univ.tech.tool.docs.utils.LineUtils;
 
 public abstract class ApiParser {
 
+	protected abstract String getProjectPath();
+
 	protected abstract String getApiName();
 
 	protected abstract String getApiUrl();
-
-	protected abstract String getApiPath();
 
 	protected abstract String getAllClassUri();
 
@@ -55,8 +55,8 @@ public abstract class ApiParser {
 		List<String> fullClassNames = parseAllClass(allClassUrl);
 
 		List<String> lines = buildLines(getApiName(), fullClassNames);
-		String allClassPath = MessageFormat.format("{0}/所有类.md", getApiPath());
-		LineUtils.writeLines(lines, allClassPath);
+		String allClassPath = MessageFormat.format("{0}/api/所有类.md", getProjectPath());
+		LineUtils.writeLines(lines, allClassPath, false);
 	}
 
 	public void writeModuleOverview() {
@@ -76,8 +76,8 @@ public abstract class ApiParser {
 		}
 
 		List<String> lines = buildLines(getApiName(), packageNameMap, false);
-		String overviewPath = MessageFormat.format("{0}/所有包.md", getApiPath());
-		LineUtils.writeLines(lines, overviewPath);
+		String overviewPath = MessageFormat.format("{0}/api/所有包.md", getProjectPath());
+		LineUtils.writeLines(lines, overviewPath, false);
 	}
 
 	public void writePackageOverview() {
@@ -90,8 +90,8 @@ public abstract class ApiParser {
 		}
 
 		List<String> lines = buildLines(getApiName(), packageNames);
-		String overviewPath = MessageFormat.format("{0}/所有包.md", getApiPath());
-		LineUtils.writeLines(lines, overviewPath);
+		String overviewPath = MessageFormat.format("{0}/api/所有包.md", getProjectPath());
+		LineUtils.writeLines(lines, overviewPath, false);
 	}
 
 	protected void writePackage(String packageName, String packageUrl) {
@@ -101,14 +101,14 @@ public abstract class ApiParser {
 		}
 
 		List<String> lines = buildLines(packageName, fullClassNameMap, true);
-		String packagePath = MessageFormat.format("{0}/{1}.md", getApiPath(), packageName);
-		LineUtils.writeLines(lines, packagePath);
+		String packagePath = MessageFormat.format("{0}/api/{1}.md", getProjectPath(), packageName);
+		LineUtils.writeLines(lines, packagePath, false);
 	}
 
-	protected void writeHrefs(String url, String tag, List<String> ignoreTags, String path) {
+	protected void writeHrefs(String url, String tag, List<String> ignoreTags, String path, boolean append) {
 		List<String> hrefs = new HtmlHrefParser().parseHrefs(url, tag, ignoreTags);
-		String hrefPath = MessageFormat.format("{0}/{1}", getApiPath(), path);
-		LineUtils.writeLines(hrefs, hrefPath);
+		String hrefPath = MessageFormat.format("{0}/{1}", getProjectPath(), path);
+		LineUtils.writeLines(hrefs, hrefPath, append);
 	}
 
 	protected List<String> parseAllClass(String allClassUrl) {
@@ -272,7 +272,8 @@ public abstract class ApiParser {
 	public void printAllClass() {
 		try {
 			List<String> ignoreFiles = Arrays.asList("README.md", "所有类.md", "所有包.md");
-			File[] files = new File(getApiPath()).listFiles(file -> !ignoreFiles.contains(file.getName()));
+			String path = MessageFormat.format("{0}/api", getProjectPath());
+			File[] files = new File(path).listFiles(file -> !ignoreFiles.contains(file.getName()));
 
 			List<String> fullClassNames = new ArrayList<>();
 			for (File file : files) {

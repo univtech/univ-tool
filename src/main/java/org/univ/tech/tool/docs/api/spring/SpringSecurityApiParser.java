@@ -7,6 +7,10 @@ public class SpringSecurityApiParser extends SpringApiParser {
 	}
 
 	@Override
+	protected String getProjectPath() {
+		return "D:/Workspace/univtech/univ-tech/spring/spring-security-5.4.1";
+	}
+
 	protected String getProjectUrl() {
 		return "https://spring.io/projects/spring-security";
 	}
@@ -19,11 +23,6 @@ public class SpringSecurityApiParser extends SpringApiParser {
 	@Override
 	protected String getApiUrl() {
 		return "https://docs.spring.io/spring-security/site/docs/5.4.1/api";
-	}
-
-	@Override
-	protected String getApiPath() {
-		return "D:/Workspace/univtech/univ-tech/spring/spring-security-5.4.1/api";
 	}
 
 }

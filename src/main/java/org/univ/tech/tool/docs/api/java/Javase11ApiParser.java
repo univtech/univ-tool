@@ -12,6 +12,11 @@ public class Javase11ApiParser extends ApiParser {
 	}
 
 	@Override
+	protected String getProjectPath() {
+		return "D:/Workspace/univtech/univ-tech/java/javase11";
+	}
+
+	@Override
 	protected String getApiName() {
 		return "JavaSE 11 API";
 	}
@@ -19,11 +24,6 @@ public class Javase11ApiParser extends ApiParser {
 	@Override
 	protected String getApiUrl() {
 		return "https://docs.oracle.com/en/java/javase/11/docs/api";
-	}
-
-	@Override
-	protected String getApiPath() {
-		return "D:/Workspace/univtech/univ-tech/java/javase11/api";
 	}
 
 	@Override

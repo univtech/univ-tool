@@ -10,6 +10,11 @@ public class CommonsIoApiParser extends ApiParser {
 	}
 
 	@Override
+	protected String getProjectPath() {
+		return "D:/Workspace/univtech/univ-tech/apache/commons/commons-io-2.8.0";
+	}
+
+	@Override
 	protected String getApiName() {
 		return "Apache Commons IO 2.8.0 API";
 	}
@@ -17,11 +22,6 @@ public class CommonsIoApiParser extends ApiParser {
 	@Override
 	protected String getApiUrl() {
 		return "http://commons.apache.org/proper/commons-io/apidocs";
-	}
-
-	@Override
-	protected String getApiPath() {
-		return "D:/Workspace/univtech/univ-tech/apache/commons/commons-io-2.8.0/api";
 	}
 
 	@Override
